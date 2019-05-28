@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
     int gx, gy, gz, ng;
     int* ma;
     
+    double* Z;
     double* N;
     double s;
     
@@ -293,8 +294,9 @@ int main(int argc, char* argv[])
     printf("%s done with %d x %d x %d grid cells\n", sv, gx, gy, gz);
     printf("\n");
     
+    Z = calloc(nd, sizeof(double));
     N = calloc(nd*nr*nr, sizeof(double));
-    if(!N)
+    if(!Z || !N)
         goto err_alloc;
     
     s = 0;
@@ -309,7 +311,7 @@ int main(int argc, char* argv[])
     st = time(NULL);
     dt = 0;
     
-    #pragma omp parallel default(none) shared(N, s, AL, QQ, st, dt) \
+    #pragma omp parallel default(none) shared(Z, N, s, AL, QQ, st, dt) \
         firstprivate(ls, sc, tc, nd, nc, d0, dm, Dl, Dh, nr, rl, rm, \
             gr, gx, gy, gz, ng, cc, cv, xc, xv, ma, ANIM, NANIM, stdout)
     {
@@ -320,6 +322,7 @@ int main(int argc, char* argv[])
         double* xv_;
         int* ma_;
         
+        double* Z_;
         double* N_;
         double s_;
         
@@ -355,8 +358,9 @@ int main(int argc, char* argv[])
             ma_ = ma;
         }
         
+        Z_ = calloc(nd, sizeof(double));
         N_ = calloc(nd*nr*nr, sizeof(double));
-        if(!N_)
+        if(!Z_ || !N_)
             perror(NULL), abort();
         
         s_ = 0;
@@ -430,8 +434,10 @@ int main(int argc, char* argv[])
                     if(nj >= 0 && nj < nr && D >= Dl && D < Dh)
                     {
                         const int k = dm*((ls ? 0.5*log(D) : sqrt(D)) - d0);
+                        const int l = k*nr*nr + ni*nr + nj;
                         
-                        N_[k*nr*nr + ni*nr + nj] += 1;
+                        Z_[k] += 1;
+                        N_[l] += 1;
                         s_ += 1;
                     }
                 }
@@ -440,12 +446,18 @@ int main(int argc, char* argv[])
         
         #pragma omp critical
         {
+            for(j = 0; j < nd; ++j)
+            {
+                const int k = j*nr*nr;
+                Z[j] += Z_[j];
+                for(i = 0; i < nr*nr; ++i)
+                    N[k+i] += (Z_[j]/Z[j])*(N_[k+i]/Z_[j] - N[k+i]);
+            }
             s += s_;
-            for(i = 0, j = nd*nr*nr; i < j; ++i)
-                N[i] += (s_/s)*(N_[i] - N[i]);
         }
         
         free(qr);
+        free(Z_);
         free(N_);
         
         if(tc)
@@ -467,6 +479,7 @@ int main(int argc, char* argv[])
     
     output(cfg.output, nd, nr, N);
     
+    free(Z);
     free(N);
     free(ma);
     for(j = 0; j < nc; ++j)
