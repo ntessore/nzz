@@ -1,0 +1,6 @@
+n(zᵢ, zⱼ)
+---------
+
+Compute the two-dimensional per-bin redshift distribution n(zᵢ, zⱼ) for
+two-point function estimators.
+
