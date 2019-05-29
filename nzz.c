@@ -17,16 +17,16 @@
 #include <omp.h>
 #endif
 
-static const int RW = 5;
+static const int RW = 6;
 
 int mapsort(const void* a, const void* b)
 {
     const double* x = a;
     const double* y = b;
     
-    if(x[4] < y[4])
+    if(x[5] < y[5])
         return -1;
-    if(x[4] > y[4])
+    if(x[5] > y[5])
         return +1;
     
     if(x[2] < y[2])
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
     for(j = 0; j < nc; ++j)
     {
         for(i = 0; i < rc[j]; ++i)
-            rv[j][i*RW+4] = index(rv[j][i*RW+0]-xl, rv[j][i*RW+1]-yl,
+            rv[j][i*RW+5] = index(rv[j][i*RW+0]-xl, rv[j][i*RW+1]-yl,
                                                 rv[j][i*RW+2]-zl, gs, gx, gy);
         qsort(rv[j], rc[j], RW*sizeof(double), mapsort);
     } 
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
     
     for(i = 0, j = 0; i < ng; ++i)
     {
-        while(j < xc && xv[j*RW+4] < i)
+        while(j < xc && xv[j*RW+5] < i)
             j += 1;
         ma[i] = j;
     }
@@ -389,7 +389,8 @@ int main(int argc, char* argv[])
             const double yi = cv_[i*RW+1];
             const double zi = cv_[i*RW+2];
             const double ri = cv_[i*RW+3];
-            const int    qi = cv_[i*RW+4];
+            const double wi = cv_[i*RW+4];
+            const int    qi = cv_[i*RW+5];
             
             const int ni = rm*(ri - rl);
             
@@ -422,6 +423,7 @@ int main(int argc, char* argv[])
                     const double yj = xv_[j*RW+1];
                     const double zj = xv_[j*RW+2];
                     const double rj = xv_[j*RW+3];
+                    const double wj = xv_[j*RW+4];
                     
                     const int nj = rm*(rj - rl);
                     
@@ -436,8 +438,8 @@ int main(int argc, char* argv[])
                         const int k = dm*((ls ? 0.5*log(D) : sqrt(D)) - d0);
                         const int l = k*nr*nr + ni*nr + nj;
                         
-                        Z_[k] += 1;
-                        N_[l] += 1;
+                        Z_[k] += wi*wj;
+                        N_[l] += wi*wj;
                         s_ += 1;
                     }
                 }

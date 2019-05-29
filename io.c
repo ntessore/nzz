@@ -241,7 +241,8 @@ int readc(const char* f, int co, double ui, int* n, double** c)
     char* sx;
     char* sy;
     char* sr;
-    double x, y, r;
+    char* sw;
+    double x, y, r, w;
     
     if(strcmp(f, "-") == 0)
         fp = stdin;
@@ -263,6 +264,7 @@ int readc(const char* f, int co, double ui, int* n, double** c)
         sx = strtok(buf, " \t\r\n");
         sy = strtok(NULL, " \t\r\n");
         sr = strtok(NULL, " \t\r\n");
+        sw = strtok(NULL, " \t\r\n");
         
         if(!sx || *sx == '#')
             continue;
@@ -277,10 +279,16 @@ int readc(const char* f, int co, double ui, int* n, double** c)
             fprintf(stderr, "error: %s:%d: missing `r` value\n", f, l);
             exit(EXIT_FAILURE);
         }
+        if(!sw || *sw == '#')
+        {
+            fprintf(stderr, "error: %s:%d: missing `w` value\n", f, l);
+            exit(EXIT_FAILURE);
+        }
         
         x = atof(sx)*ui;
         y = atof(sy)*ui;
         r = atof(sr);
+        w = atof(sw);
         
         switch(co)
         {
@@ -297,6 +305,7 @@ int readc(const char* f, int co, double ui, int* n, double** c)
         }
         
         d[i*RW+3] = r;
+        d[i*RW+4] = w;
         
         i += 1;
         
